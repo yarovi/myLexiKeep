@@ -1,0 +1,8 @@
+packages:
+  - name: default
+    functions:
+      - name: savelanguagenote
+        runtime: python:3.11
+        web: true
+        environment:
+          GOOGLE_SCRIPT_URL: "${GOOGLE_SCRIPT_URL}"

@@ -1,4 +1,9 @@
+# Sensitive configuration
+config/.env
 
-.env
+# DigitalOcean deployment metadata
+.deployed
 
-/config/*
+# Python
+__pycache__/
+*.pyc
