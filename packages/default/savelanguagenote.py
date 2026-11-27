@@ -5,44 +5,89 @@ import urllib.error
 
 
 def main(args):
+    print("[INFO] savelanguagenote - version 2.0.0")
 
-    print("[INFO] savelanguagenote - version 1.2.0 - deployed from local project")
     word = args.get("word")
-    translate = args.get("translate")
+    translations = args.get("translations")
+    game = args.get("game")
 
-    # Validar parámetros
-    if not word or not translate:
+    # Validaciones
+    if not word:
         return {
             "statusCode": 400,
             "body": {
                 "error": "BAD_REQUEST",
-                "message": "word and translate are required"
+                "message": "word is required"
             }
         }
 
-    google_script_url = os.environ.get("GOOGLE_SCRIPT_URL")
+    if not translations:
+        return {
+            "statusCode": 400,
+            "body": {
+                "error": "BAD_REQUEST",
+                "message": "translations is required"
+            }
+        }
 
-    print(f"[INFO] GOOGLE_SCRIPT_URL configured: {bool(google_script_url)}")
-    print(f"[INFO] GOOGLE_SCRIPT_URL valid: {bool(google_script_url and google_script_url.startswith('https://'))}")
+    if not isinstance(translations, list):
+        return {
+            "statusCode": 400,
+            "body": {
+                "error": "BAD_REQUEST",
+                "message": "translations must be an array"
+            }
+        }
 
-    if not google_script_url or not google_script_url.startswith("https://"):
+    if game is None:
+        return {
+            "statusCode": 400,
+            "body": {
+                "error": "BAD_REQUEST",
+                "message": "game is required"
+            }
+        }
+
+    GOOGLE_SCRIPT_SAVE_URL = os.environ.get(
+        "GOOGLE_SCRIPT_SAVE_URL"
+    )
+
+    print(
+        f"[INFO] GOOGLE_SCRIPT_SAVE_URL configured: "
+        f"{bool(GOOGLE_SCRIPT_SAVE_URL)}"
+    )
+
+    print(
+        f"[INFO] GOOGLE_SCRIPT_SAVE_URL valid: "
+        f"{bool(GOOGLE_SCRIPT_SAVE_URL and GOOGLE_SCRIPT_SAVE_URL.startswith('https://'))}"
+    )
+
+    if (
+        not GOOGLE_SCRIPT_SAVE_URL
+        or not GOOGLE_SCRIPT_SAVE_URL.startswith("https://")
+    ):
         return {
             "statusCode": 500,
             "body": {
                 "error": "CONFIGURATION_ERROR",
-                "message": "GOOGLE_SCRIPT_URL is not configured"
+                "message": "GOOGLE_SCRIPT_SAVE_URL is not configured"
             }
         }
 
     payload = {
         "word": word.strip(),
-        "translate": translate.strip()
+        "translations": [
+            str(item).strip()
+            for item in translations
+            if str(item).strip()
+        ],
+        "game": game
     }
 
     data = json.dumps(payload).encode("utf-8")
 
     request = urllib.request.Request(
-        google_script_url,
+        GOOGLE_SCRIPT_SAVE_URL,
         data=data,
         headers={
             "Content-Type": "application/json"
@@ -51,7 +96,6 @@ def main(args):
     )
 
     try:
-
         with urllib.request.urlopen(request) as response:
             google_response = response.read().decode("utf-8")
 
@@ -59,14 +103,25 @@ def main(args):
             "statusCode": 201,
             "body": {
                 "message": "Word saved successfully",
-                "word": word,
-                "translate": translate
+                "word": payload["word"],
+                "translations": payload["translations"],
+                "game": payload["game"]
+            }
+        }
+
+    except urllib.error.HTTPError as ex:
+        print(f"[ERROR] HTTPError: {ex}")
+
+        return {
+            "statusCode": ex.code,
+            "body": {
+                "error": "UPSTREAM_ERROR",
+                "message": "Google Script returned an error"
             }
         }
 
     except Exception as ex:
-
-        print("ERROR:", str(ex))
+        print(f"[ERROR] {str(ex)}")
 
         return {
             "statusCode": 500,
@@ -75,10 +130,3 @@ def main(args):
                 "message": "Unable to save word"
             }
         }
-
-'''def mai_vn_v0(args):
-    name = args.get("name", "stranger")
-    greeting = "Hello " + name + "!"
-    print(greeting)
-    return {"body": greeting}
-'''

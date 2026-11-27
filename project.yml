@@ -5,4 +5,9 @@ packages:
         runtime: python:3.11
         web: true
         environment:
-          GOOGLE_SCRIPT_URL: "${GOOGLE_SCRIPT_URL}"
+          GOOGLE_SCRIPT_URL: "${GOOGLE_SCRIPT_SAVE_URL}"
+      - name: listlanguagenotes
+        runtime: python:3.11
+        web: true
+        environment:
+          GOOGLE_SCRIPT_LIST_URL: "${GOOGLE_SCRIPT_LIST_URL}"
